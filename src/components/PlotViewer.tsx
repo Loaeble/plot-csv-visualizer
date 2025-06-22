@@ -1,11 +1,14 @@
 
 import React, { useState } from 'react';
-import Plot from 'react-plotly.js';
+import Plotly from 'plotly.js-dist-min';
+import createPlotlyComponent from 'react-plotly.js/factory';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Download } from 'lucide-react';
+
+const Plot = createPlotlyComponent(Plotly);
 
 interface PlotData {
   frequency: number;
@@ -48,6 +51,26 @@ const PlotViewer: React.FC<PlotViewerProps> = ({ data, responseColumns, fileName
     }
   };
 
+  const exportAsCSV = () => {
+    const csvContent = [
+      ['Frequency', ...responseColumns].join(','),
+      ...data.map(row => [
+        row.frequency,
+        ...responseColumns.map(col => row[col])
+      ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    link.setAttribute('href', url);
+    link.setAttribute('download', fileName.replace('.csv', '_exported.csv'));
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   // Prepare data for Plotly
   const plotData = responseColumns
     .filter(column => visibleColumns.has(column))
@@ -65,7 +88,7 @@ const PlotViewer: React.FC<PlotViewerProps> = ({ data, responseColumns, fileName
 
   const layout = {
     title: {
-      text: 'Frequency Response Plot',
+      text: 'Interactive Frequency Response Plot',
       font: { size: 18, family: 'Arial, sans-serif' }
     },
     xaxis: {
@@ -132,6 +155,16 @@ const PlotViewer: React.FC<PlotViewerProps> = ({ data, responseColumns, fileName
                 Show All
               </>
             )}
+          </Button>
+          
+          <Button
+            onClick={exportAsCSV}
+            variant="outline"
+            size="sm"
+            className="text-xs"
+          >
+            <Download className="h-3 w-3 mr-1" />
+            Export CSV
           </Button>
           
           <div className="flex items-center space-x-2">
@@ -209,10 +242,10 @@ const PlotViewer: React.FC<PlotViewerProps> = ({ data, responseColumns, fileName
           </div>
           
           <div className="mt-4 text-center">
-            <h3 className="text-lg font-semibold text-gray-900">Frequency Response Plot</h3>
+            <h3 className="text-lg font-semibold text-gray-900">Interactive Frequency Response Plot</h3>
             <p className="text-sm text-gray-600">Source: {fileName}</p>
             <p className="text-xs text-gray-500 mt-2">
-              Use the toolbar above the plot to zoom, pan, download, or interact with the data
+              🔍 Zoom by selecting area • 📐 Pan by dragging • 📊 Hover for values • 📥 Download using toolbar
             </p>
           </div>
         </CardContent>
