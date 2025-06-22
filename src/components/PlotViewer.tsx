@@ -1,19 +1,15 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Plotly from 'plotly.js-dist-min';
 import createPlotlyComponent from 'react-plotly.js/factory';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
-import { Eye, EyeOff, Download } from 'lucide-react';
+import { Eye, EyeOff, Download, Calculator } from 'lucide-react';
+import { calculateRSS, exportRSSToCSV } from '@/utils/rssCalculations';
+import { PlotData } from '@/types/plot';
 
 const Plot = createPlotlyComponent(Plotly);
-
-interface PlotData {
-  frequency: number;
-  [key: string]: number;
-}
 
 interface PlotViewerProps {
   data: PlotData[];
@@ -28,10 +24,34 @@ const COLORS = [
 ];
 
 const PlotViewer: React.FC<PlotViewerProps> = ({ data, responseColumns, fileName }) => {
+  const [currentData, setCurrentData] = useState<PlotData[]>(data);
+  const [currentColumns, setCurrentColumns] = useState<string[]>(responseColumns);
+  const [rssColumns, setRssColumns] = useState<string[]>([]);
+  const [hasRSS, setHasRSS] = useState(false);
   const [visibleColumns, setVisibleColumns] = useState<Set<string>>(
     new Set(responseColumns)
   );
   const [showGrid, setShowGrid] = useState(true);
+
+  useEffect(() => {
+    setCurrentData(data);
+    setCurrentColumns(responseColumns);
+    setVisibleColumns(new Set(responseColumns));
+    setHasRSS(false);
+    setRssColumns([]);
+  }, [data, responseColumns]);
+
+  const calculateRSSValues = () => {
+    const result = calculateRSS(currentData, responseColumns);
+    setCurrentData(result.data);
+    setCurrentColumns(result.allColumns);
+    setRssColumns(result.rssColumns);
+    setHasRSS(true);
+    
+    // Show RSS columns by default, hide original components for cleaner view
+    const newVisibleColumns = new Set([...responseColumns.slice(0, 3), ...result.rssColumns]);
+    setVisibleColumns(newVisibleColumns);
+  };
 
   const toggleColumnVisibility = (column: string) => {
     const newVisibleColumns = new Set(visibleColumns);
@@ -44,46 +64,51 @@ const PlotViewer: React.FC<PlotViewerProps> = ({ data, responseColumns, fileName
   };
 
   const toggleAllColumns = () => {
-    if (visibleColumns.size === responseColumns.length) {
+    if (visibleColumns.size === currentColumns.length) {
       setVisibleColumns(new Set());
     } else {
-      setVisibleColumns(new Set(responseColumns));
+      setVisibleColumns(new Set(currentColumns));
     }
   };
 
   const exportAsCSV = () => {
-    const csvContent = [
-      ['Frequency', ...responseColumns].join(','),
-      ...data.map(row => [
-        row.frequency,
-        ...responseColumns.map(col => row[col])
-      ].join(','))
-    ].join('\n');
+    if (hasRSS) {
+      exportRSSToCSV(currentData, currentColumns, fileName);
+    } else {
+      const csvContent = [
+        ['Frequency', ...currentColumns].join(','),
+        ...currentData.map(row => [
+          row.frequency,
+          ...currentColumns.map(col => row[col])
+        ].join(','))
+      ].join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
-    link.setAttribute('href', url);
-    link.setAttribute('download', fileName.replace('.csv', '_exported.csv'));
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+      link.setAttribute('href', url);
+      link.setAttribute('download', fileName.replace('.csv', '_exported.csv'));
+      link.style.visibility = 'hidden';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
   };
 
   // Prepare data for Plotly
-  const plotData = responseColumns
+  const plotData = currentColumns
     .filter(column => visibleColumns.has(column))
     .map((column, index) => ({
-      x: data.map(d => d.frequency),
-      y: data.map(d => d[column]),
+      x: currentData.map(d => d.frequency),
+      y: currentData.map(d => d[column]),
       type: 'scatter' as const,
       mode: 'lines' as const,
       name: column,
       line: {
-        color: COLORS[index % COLORS.length],
-        width: 2
-      }
+        color: rssColumns.includes(column) ? COLORS[0] : COLORS[index % COLORS.length],
+        width: rssColumns.includes(column) ? 3 : 2
+      },
+      opacity: rssColumns.includes(column) ? 1 : 0.7
     }));
 
   const layout = {
@@ -138,13 +163,25 @@ const PlotViewer: React.FC<PlotViewerProps> = ({ data, responseColumns, fileName
       {/* Controls */}
       <div className="flex flex-wrap items-center gap-4 p-4 bg-gray-50 rounded-lg">
         <div className="flex items-center gap-2">
+          {!hasRSS && (
+            <Button
+              onClick={calculateRSSValues}
+              variant="outline"
+              size="sm"
+              className="text-xs bg-blue-50 hover:bg-blue-100 border-blue-200"
+            >
+              <Calculator className="h-3 w-3 mr-1" />
+              Calculate RSS
+            </Button>
+          )}
+          
           <Button
             onClick={toggleAllColumns}
             variant="outline"
             size="sm"
             className="text-xs"
           >
-            {visibleColumns.size === responseColumns.length ? (
+            {visibleColumns.size === currentColumns.length ? (
               <>
                 <EyeOff className="h-3 w-3 mr-1" />
                 Hide All
@@ -164,7 +201,7 @@ const PlotViewer: React.FC<PlotViewerProps> = ({ data, responseColumns, fileName
             className="text-xs"
           >
             <Download className="h-3 w-3 mr-1" />
-            Export CSV
+            Export CSV{hasRSS ? ' (with RSS)' : ''}
           </Button>
           
           <div className="flex items-center space-x-2">
@@ -180,17 +217,21 @@ const PlotViewer: React.FC<PlotViewerProps> = ({ data, responseColumns, fileName
         </div>
 
         <div className="flex flex-wrap gap-2">
-          {responseColumns.map((column, index) => (
+          {currentColumns.map((column, index) => (
             <Badge
               key={column}
               variant={visibleColumns.has(column) ? "default" : "secondary"}
-              className="cursor-pointer hover:opacity-80 transition-opacity"
+              className={`cursor-pointer hover:opacity-80 transition-opacity ${
+                rssColumns.includes(column) ? 'ring-2 ring-blue-400' : ''
+              }`}
               style={{
-                backgroundColor: visibleColumns.has(column) ? COLORS[index % COLORS.length] : undefined
+                backgroundColor: visibleColumns.has(column) 
+                  ? (rssColumns.includes(column) ? '#3b82f6' : COLORS[index % COLORS.length])
+                  : undefined
               }}
               onClick={() => toggleColumnVisibility(column)}
             >
-              {column}
+              {column} {rssColumns.includes(column) ? '(RSS)' : ''}
             </Badge>
           ))}
         </div>
@@ -200,28 +241,26 @@ const PlotViewer: React.FC<PlotViewerProps> = ({ data, responseColumns, fileName
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600">{data.length}</div>
+            <div className="text-2xl font-bold text-blue-600">{currentData.length}</div>
             <div className="text-sm text-gray-600">Data Points</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-green-600">{responseColumns.length}</div>
-            <div className="text-sm text-gray-600">Response Channels</div>
+            <div className="text-2xl font-bold text-green-600">{currentColumns.length}</div>
+            <div className="text-sm text-gray-600">Total Channels</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-purple-600">
-              {Math.min(...data.map(d => d.frequency)).toFixed(1)}
-            </div>
-            <div className="text-sm text-gray-600">Min Freq (Hz)</div>
+            <div className="text-2xl font-bold text-purple-600">{rssColumns.length}</div>
+            <div className="text-sm text-gray-600">RSS Channels</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-orange-600">
-              {Math.max(...data.map(d => d.frequency)).toFixed(1)}
+              {Math.max(...currentData.map(d => d.frequency)).toFixed(1)}
             </div>
             <div className="text-sm text-gray-600">Max Freq (Hz)</div>
           </CardContent>
@@ -242,8 +281,15 @@ const PlotViewer: React.FC<PlotViewerProps> = ({ data, responseColumns, fileName
           </div>
           
           <div className="mt-4 text-center">
-            <h3 className="text-lg font-semibold text-gray-900">Interactive Frequency Response Plot</h3>
+            <h3 className="text-lg font-semibold text-gray-900">
+              {hasRSS ? 'Vibration Response with RSS Calculation' : 'Interactive Frequency Response Plot'}
+            </h3>
             <p className="text-sm text-gray-600">Source: {fileName}</p>
+            {hasRSS && (
+              <p className="text-xs text-blue-600 mt-1">
+                RSS (Root Sum of Squares) calculated from X, Y, Z components
+              </p>
+            )}
             <p className="text-xs text-gray-500 mt-2">
               🔍 Zoom by selecting area • 📐 Pan by dragging • 📊 Hover for values • 📥 Download using toolbar
             </p>

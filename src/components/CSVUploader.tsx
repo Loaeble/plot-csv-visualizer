@@ -1,14 +1,9 @@
-
 import React, { useRef, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Upload, FileText } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-
-interface PlotData {
-  frequency: number;
-  [key: string]: number;
-}
+import { PlotData } from '@/types/plot';
 
 interface CSVUploaderProps {
   onDataParsed: (data: PlotData[], columns: string[], filename: string) => void;
@@ -143,7 +138,6 @@ const CSVUploader: React.FC<CSVUploaderProps> = ({ onDataParsed }) => {
             <>
               <Upload className="h-6 w-6" />
               <span>Click to upload CSV file</span>
-              <span className="text-sm text-gray-500">or drag and drop</span>
             </>
           )}
         </div>
@@ -153,12 +147,11 @@ const CSVUploader: React.FC<CSVUploaderProps> = ({ onDataParsed }) => {
         <div className="flex items-start gap-2">
           <FileText className="h-4 w-4 mt-0.5 flex-shrink-0" />
           <div>
-            <p className="font-medium mb-1">CSV Format Requirements:</p>
+            <p className="font-medium mb-1">CSV Format for RSS Analysis:</p>
             <ul className="list-disc list-inside space-y-1 text-xs">
               <li>First column: Frequency values (Hz)</li>
-              <li>Remaining columns: Response data</li>
-              <li>Include column headers in first row</li>
-              <li>Use comma separators</li>
+              <li>Response columns: Node_ID_X, Node_ID_Y, Node_ID_Z</li>
+              <li>RSS will be calculated automatically</li>
             </ul>
           </div>
         </div>

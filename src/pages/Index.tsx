@@ -1,26 +1,17 @@
+
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Upload, Download, FileText, TrendingUp, Sparkles, BarChart3, Zap } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import CSVUploader from '@/components/CSVUploader';
 import PlotViewer from '@/components/PlotViewer';
-
-interface PlotData {
-  frequency: number;
-  [key: string]: number;
-}
+import { PlotData } from '@/types/plot';
 
 const Index = () => {
   const [plotData, setPlotData] = useState<PlotData[]>([]);
   const [responseColumns, setResponseColumns] = useState<string[]>([]);
   const [fileName, setFileName] = useState<string>('');
-  const [plotTitle, setPlotTitle] = useState<string>('Frequency Response Plot');
-  const [xLabel, setXLabel] = useState<string>('Frequency (Hz)');
-  const [yLabel, setYLabel] = useState<string>('Response');
   const { toast } = useToast();
 
   const handleDataParsed = (data: PlotData[], columns: string[], filename: string) => {
@@ -43,7 +34,7 @@ const Index = () => {
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto p-4 space-y-8">
-        {/* Enhanced Header */}
+        {/* Header */}
         <div className="text-center py-12 animate-fade-in">
           <div className="flex items-center justify-center gap-4 mb-6">
             <div className="p-3 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl shadow-lg animate-bounce">
@@ -58,31 +49,15 @@ const Index = () => {
           </div>
           
           <h1 className="text-6xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-6 animate-scale-in">
-            Frequency Response Plotter
+            Vibration Analysis Tool
           </h1>
           
           <p className="text-xl text-gray-700 max-w-3xl mx-auto leading-relaxed animate-fade-in" style={{ animationDelay: '0.3s' }}>
-            Transform your CSV data into stunning frequency response visualizations with our 
-            <span className="font-semibold text-purple-600"> interactive plotting tool</span>
+            Advanced frequency response analysis with RSS calculation
           </p>
-          
-          <div className="flex justify-center gap-4 mt-8 animate-fade-in" style={{ animationDelay: '0.6s' }}>
-            <div className="flex items-center gap-2 px-4 py-2 bg-white/70 backdrop-blur-sm rounded-full shadow-md">
-              <Sparkles className="h-4 w-4 text-yellow-500" />
-              <span className="text-sm font-medium text-gray-700">Interactive Charts</span>
-            </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-white/70 backdrop-blur-sm rounded-full shadow-md">
-              <FileText className="h-4 w-4 text-blue-500" />
-              <span className="text-sm font-medium text-gray-700">CSV Import</span>
-            </div>
-            <div className="flex items-center gap-2 px-4 py-2 bg-white/70 backdrop-blur-sm rounded-full shadow-md">
-              <Download className="h-4 w-4 text-green-500" />
-              <span className="text-sm font-medium text-gray-700">Export Ready</span>
-            </div>
-          </div>
         </div>
 
-        {/* Enhanced Main Content */}
+        {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
           {/* Upload Section */}
           <Card className="shadow-2xl hover:shadow-3xl transition-all duration-300 border-0 bg-white/80 backdrop-blur-sm hover:scale-105 animate-slide-in-right">
@@ -92,7 +67,7 @@ const Index = () => {
                 <div className="p-2 bg-white/20 rounded-lg">
                   <Upload className="h-6 w-6" />
                 </div>
-                Upload Your Data
+                Upload Vibration Data
               </CardTitle>
             </CardHeader>
             <CardContent className="p-8">
@@ -100,7 +75,7 @@ const Index = () => {
                 <Alert className="border-blue-200 bg-blue-50/50 animate-fade-in">
                   <FileText className="h-5 w-5 text-blue-600" />
                   <AlertDescription className="text-blue-800">
-                    <strong>CSV Format:</strong> First column should be frequency (Hz), remaining columns are response data
+                    <strong>CSV Format:</strong> Frequency column + Response columns (X, Y, Z directions supported for RSS)
                   </AlertDescription>
                 </Alert>
                 
@@ -133,7 +108,7 @@ const Index = () => {
             </CardContent>
           </Card>
 
-          {/* Plot Information Section */}
+          {/* Features Section */}
           <Card className="shadow-2xl hover:shadow-3xl transition-all duration-300 border-0 bg-white/80 backdrop-blur-sm hover:scale-105 animate-slide-in-right" style={{ animationDelay: '0.2s' }}>
             <CardHeader className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white rounded-t-lg relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-400/20"></div>
@@ -141,40 +116,33 @@ const Index = () => {
                 <div className="p-2 bg-white/20 rounded-lg">
                   <Sparkles className="h-6 w-6" />
                 </div>
-                Plot Features
+                Analysis Features
               </CardTitle>
             </CardHeader>
             <CardContent className="p-8">
               <div className="space-y-4">
                 <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
                   <TrendingUp className="h-5 w-5 text-blue-600" />
-                  <span className="text-sm font-medium text-gray-700">Interactive zoom and pan</span>
+                  <span className="text-sm font-medium text-gray-700">RSS Calculation (X, Y, Z → Resultant)</span>
                 </div>
                 <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg">
                   <Download className="h-5 w-5 text-green-600" />
-                  <span className="text-sm font-medium text-gray-700">Built-in download as PNG</span>
+                  <span className="text-sm font-medium text-gray-700">Export with calculated RSS</span>
                 </div>
                 <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg">
                   <BarChart3 className="h-5 w-5 text-purple-600" />
-                  <span className="text-sm font-medium text-gray-700">Toggle data series visibility</span>
+                  <span className="text-sm font-medium text-gray-700">Interactive zoom & pan</span>
                 </div>
                 <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg">
                   <Zap className="h-5 w-5 text-orange-600" />
-                  <span className="text-sm font-medium text-gray-700">Hover for precise values</span>
+                  <span className="text-sm font-medium text-gray-700">Toggle visibility controls</span>
                 </div>
-                
-                {plotData.length > 0 && (
-                  <div className="mt-6 p-4 bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 rounded-lg">
-                    <p className="text-sm font-semibold text-amber-800 mb-2">📊 Your plot is ready!</p>
-                    <p className="text-xs text-amber-700">Scroll down to see your interactive frequency response plot with all the advanced features.</p>
-                  </div>
-                )}
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Enhanced Plot Viewer */}
+        {/* Plot Viewer */}
         {plotData.length > 0 && (
           <Card className="shadow-2xl border-0 bg-white/90 backdrop-blur-sm animate-scale-in">
             <CardHeader className="bg-gradient-to-r from-purple-600 via-pink-600 to-rose-600 text-white rounded-t-lg relative overflow-hidden">
@@ -183,11 +151,7 @@ const Index = () => {
                 <div className="p-2 bg-white/20 rounded-lg">
                   <BarChart3 className="h-6 w-6" />
                 </div>
-                Interactive Frequency Response Plot
-                <div className="ml-auto flex items-center gap-2 text-sm">
-                  <Sparkles className="h-4 w-4" />
-                  Plotly Powered
-                </div>
+                Vibration Analysis Plot
               </CardTitle>
             </CardHeader>
             <CardContent className="p-8">
