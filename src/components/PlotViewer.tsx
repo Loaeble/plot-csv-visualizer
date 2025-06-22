@@ -1,6 +1,6 @@
 
 import React, { useState } from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import Plot from 'react-plotly.js';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -48,20 +48,66 @@ const PlotViewer: React.FC<PlotViewerProps> = ({ data, responseColumns, fileName
     }
   };
 
-  const customTooltip = ({ active, payload, label }: any) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-3 border border-gray-200 rounded-lg shadow-lg">
-          <p className="font-medium text-gray-900">{`Frequency: ${label} Hz`}</p>
-          {payload.map((entry: any, index: number) => (
-            <p key={index} style={{ color: entry.color }} className="text-sm">
-              {`${entry.dataKey}: ${entry.value.toFixed(6)}`}
-            </p>
-          ))}
-        </div>
-      );
+  // Prepare data for Plotly
+  const plotData = responseColumns
+    .filter(column => visibleColumns.has(column))
+    .map((column, index) => ({
+      x: data.map(d => d.frequency),
+      y: data.map(d => d[column]),
+      type: 'scatter' as const,
+      mode: 'lines' as const,
+      name: column,
+      line: {
+        color: COLORS[index % COLORS.length],
+        width: 2
+      }
+    }));
+
+  const layout = {
+    title: {
+      text: 'Frequency Response Plot',
+      font: { size: 18, family: 'Arial, sans-serif' }
+    },
+    xaxis: {
+      title: 'Frequency (Hz)',
+      showgrid: showGrid,
+      gridcolor: '#f0f0f0'
+    },
+    yaxis: {
+      title: 'Response',
+      showgrid: showGrid,
+      gridcolor: '#f0f0f0'
+    },
+    plot_bgcolor: 'white',
+    paper_bgcolor: 'white',
+    showlegend: true,
+    legend: {
+      orientation: 'h' as const,
+      x: 0.5,
+      xanchor: 'center' as const,
+      y: -0.2
+    },
+    margin: {
+      l: 60,
+      r: 30,
+      t: 60,
+      b: 80
+    },
+    autosize: true
+  };
+
+  const config = {
+    responsive: true,
+    displayModeBar: true,
+    modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d'],
+    displaylogo: false,
+    toImageButtonOptions: {
+      format: 'png' as const,
+      filename: fileName.replace('.csv', '_plot'),
+      height: 600,
+      width: 1000,
+      scale: 2
     }
-    return null;
   };
 
   return (
@@ -149,55 +195,25 @@ const PlotViewer: React.FC<PlotViewerProps> = ({ data, responseColumns, fileName
         </Card>
       </div>
 
-      {/* Interactive Chart */}
+      {/* Interactive Plotly Chart */}
       <Card>
         <CardContent className="p-6">
-          <div className="h-96 w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart
-                data={data}
-                margin={{
-                  top: 20,
-                  right: 30,
-                  left: 20,
-                  bottom: 60,
-                }}
-              >
-                {showGrid && <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />}
-                <XAxis 
-                  dataKey="frequency" 
-                  stroke="#666"
-                  fontSize={12}
-                  tickFormatter={(value) => `${value} Hz`}
-                />
-                <YAxis 
-                  stroke="#666"
-                  fontSize={12}
-                />
-                <Tooltip content={customTooltip} />
-                <Legend />
-                
-                {responseColumns.map((column, index) => (
-                  visibleColumns.has(column) && (
-                    <Line
-                      key={column}
-                      type="monotone"
-                      dataKey={column}
-                      stroke={COLORS[index % COLORS.length]}
-                      strokeWidth={2}
-                      dot={false}
-                      connectNulls={false}
-                      name={column}
-                    />
-                  )
-                ))}
-              </LineChart>
-            </ResponsiveContainer>
+          <div className="w-full" style={{ height: '500px' }}>
+            <Plot
+              data={plotData}
+              layout={layout}
+              config={config}
+              style={{ width: '100%', height: '100%' }}
+              useResizeHandler={true}
+            />
           </div>
           
           <div className="mt-4 text-center">
             <h3 className="text-lg font-semibold text-gray-900">Frequency Response Plot</h3>
             <p className="text-sm text-gray-600">Source: {fileName}</p>
+            <p className="text-xs text-gray-500 mt-2">
+              Use the toolbar above the plot to zoom, pan, download, or interact with the data
+            </p>
           </div>
         </CardContent>
       </Card>

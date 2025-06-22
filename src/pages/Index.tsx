@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,37 +30,6 @@ const Index = () => {
     toast({
       title: "🎉 CSV Loaded Successfully",
       description: `Loaded ${data.length} data points with ${columns.length} response columns`,
-    });
-  };
-
-  const handleDownloadPlot = () => {
-    if (plotData.length === 0) {
-      toast({
-        title: "No Data Available",
-        description: "Please upload a CSV file first to generate plots",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Create a canvas element to export the chart
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    if (ctx) {
-      canvas.width = 1200;
-      canvas.height = 800;
-      ctx.fillStyle = 'white';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-      
-      const link = document.createElement('a');
-      link.download = `${fileName.replace('.csv', '')}_plot.png`;
-      link.href = canvas.toDataURL();
-      link.click();
-    }
-
-    toast({
-      title: "✨ Plot Downloaded",
-      description: "Your frequency response plot has been saved successfully",
     });
   };
 
@@ -165,62 +133,42 @@ const Index = () => {
             </CardContent>
           </Card>
 
-          {/* Enhanced Controls Section */}
+          {/* Plot Information Section */}
           <Card className="shadow-2xl hover:shadow-3xl transition-all duration-300 border-0 bg-white/80 backdrop-blur-sm hover:scale-105 animate-slide-in-right" style={{ animationDelay: '0.2s' }}>
             <CardHeader className="bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 text-white rounded-t-lg relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-r from-purple-400/20 to-pink-400/20"></div>
               <CardTitle className="flex items-center gap-3 relative z-10">
                 <div className="p-2 bg-white/20 rounded-lg">
-                  <Download className="h-6 w-6" />
+                  <Sparkles className="h-6 w-6" />
                 </div>
-                Customize & Export
+                Plot Features
               </CardTitle>
             </CardHeader>
             <CardContent className="p-8">
-              <div className="space-y-6">
-                <div className="animate-fade-in">
-                  <Label htmlFor="plot-title" className="text-gray-700 font-medium">Plot Title</Label>
-                  <Input 
-                    id="plot-title" 
-                    value={plotTitle}
-                    onChange={(e) => setPlotTitle(e.target.value)}
-                    className="mt-2 border-2 focus:border-purple-400 transition-colors"
-                    placeholder="Enter your plot title"
-                  />
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
+                  <TrendingUp className="h-5 w-5 text-blue-600" />
+                  <span className="text-sm font-medium text-gray-700">Interactive zoom and pan</span>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg">
+                  <Download className="h-5 w-5 text-green-600" />
+                  <span className="text-sm font-medium text-gray-700">Built-in download as PNG</span>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-purple-50 to-pink-50 rounded-lg">
+                  <BarChart3 className="h-5 w-5 text-purple-600" />
+                  <span className="text-sm font-medium text-gray-700">Toggle data series visibility</span>
+                </div>
+                <div className="flex items-center gap-3 p-3 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg">
+                  <Zap className="h-5 w-5 text-orange-600" />
+                  <span className="text-sm font-medium text-gray-700">Hover for precise values</span>
                 </div>
                 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="animate-fade-in" style={{ animationDelay: '0.1s' }}>
-                    <Label htmlFor="x-label" className="text-gray-700 font-medium">X-Axis Label</Label>
-                    <Input 
-                      id="x-label" 
-                      value={xLabel}
-                      onChange={(e) => setXLabel(e.target.value)}
-                      className="mt-2 border-2 focus:border-blue-400 transition-colors"
-                      placeholder="X-axis label"
-                    />
+                {plotData.length > 0 && (
+                  <div className="mt-6 p-4 bg-gradient-to-r from-yellow-50 to-amber-50 border border-yellow-200 rounded-lg">
+                    <p className="text-sm font-semibold text-amber-800 mb-2">📊 Your plot is ready!</p>
+                    <p className="text-xs text-amber-700">Scroll down to see your interactive frequency response plot with all the advanced features.</p>
                   </div>
-                  <div className="animate-fade-in" style={{ animationDelay: '0.2s' }}>
-                    <Label htmlFor="y-label" className="text-gray-700 font-medium">Y-Axis Label</Label>
-                    <Input 
-                      id="y-label" 
-                      value={yLabel}
-                      onChange={(e) => setYLabel(e.target.value)}
-                      className="mt-2 border-2 focus:border-pink-400 transition-colors"
-                      placeholder="Y-axis label"
-                    />
-                  </div>
-                </div>
-
-                <Button 
-                  onClick={handleDownloadPlot}
-                  disabled={plotData.length === 0}
-                  className="w-full h-14 bg-gradient-to-r from-green-600 via-emerald-600 to-teal-600 hover:from-green-700 hover:via-emerald-700 hover:to-teal-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed animate-fade-in"
-                  style={{ animationDelay: '0.3s' }}
-                >
-                  <Download className="h-5 w-5 mr-3" />
-                  Download High-Quality Plot
-                </Button>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -238,7 +186,7 @@ const Index = () => {
                 Interactive Frequency Response Plot
                 <div className="ml-auto flex items-center gap-2 text-sm">
                   <Sparkles className="h-4 w-4" />
-                  Live Preview
+                  Plotly Powered
                 </div>
               </CardTitle>
             </CardHeader>
