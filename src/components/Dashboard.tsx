@@ -23,6 +23,7 @@ import PlotViewer from './PlotViewer';
 import ParticleBackground from './ParticleBackground';
 import VibrationSimulator from './VibrationSimulator';
 import DiagnosticPanel from './DiagnosticPanel';
+import PowerPointExport from './PowerPointExport';
 import { PlotData } from '@/types/plot';
 
 const Dashboard: React.FC = () => {
@@ -74,7 +75,7 @@ const Dashboard: React.FC = () => {
                 <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
                   Vibration Analysis Dashboard
                 </h1>
-                <p className="text-slate-300 mt-1">Advanced real-time vibration monitoring & diagnostics</p>
+                <p className="text-slate-300 mt-1">Advanced real-time vibration monitoring & diagnostics with PowerPoint export</p>
               </div>
             </div>
             
@@ -271,12 +272,19 @@ const Dashboard: React.FC = () => {
               onDataGenerated={handleDataParsed}
             />
 
+            {/* PowerPoint Export Panel */}
+            <PowerPointExport 
+              data={plotData}
+              responseColumns={responseColumns}
+              fileName={fileName}
+            />
+
             {/* Export Panel */}
             <Card className="bg-black/20 backdrop-blur-sm border-white/10 shadow-2xl">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-white">
                   <Download className="h-5 w-5" />
-                  Export & Reports
+                  Quick Export
                 </CardTitle>
               </CardHeader>
               <CardContent className="p-6 space-y-3">
