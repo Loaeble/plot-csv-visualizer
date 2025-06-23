@@ -1,9 +1,9 @@
 
 import React from 'react';
-import VibrationAnalysisDashboard from './VibrationAnalysisDashboard';
+import EnhancedVibrationDashboard from './EnhancedVibrationDashboard';
 
 const Dashboard: React.FC = () => {
-  return <VibrationAnalysisDashboard />;
+  return <EnhancedVibrationDashboard />;
 };
 
 export default Dashboard;

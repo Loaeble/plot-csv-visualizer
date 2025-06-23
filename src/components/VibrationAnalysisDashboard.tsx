@@ -55,7 +55,16 @@ const VibrationAnalysisDashboard: React.FC = () => {
   const availableNodes = useMemo(() => getAvailableNodes(rssColumns), [rssColumns]);
 
   const currentNodeData = useMemo(() => {
-    if (!selectedNode || !processedData.length) return { data: [], rmsData: {} };
+    if (!selectedNode || !processedData.length) {
+      return { 
+        data: [], 
+        rmsData: {
+          "1-100Hz": 0,
+          "100-150Hz": 0,
+          "150-300Hz": 0
+        }
+      };
+    }
 
     const rssColumn = `RSS_${selectedNode}`;
     
@@ -120,7 +129,11 @@ const VibrationAnalysisDashboard: React.FC = () => {
             [`RSS_${nodeId}`]: (row[`RSS_${nodeId}`] || 0) / magnificationFactor
           })),
           [`RSS_${nodeId}`]
-        )[`RSS_${nodeId}`] || {}
+        )[`RSS_${nodeId}`] || {
+          "1-100Hz": 0,
+          "100-150Hz": 0,
+          "150-300Hz": 0
+        }
       }))
     };
 
